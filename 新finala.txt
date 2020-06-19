@@ -1,0 +1,161 @@
+Sub getprices()
+
+Dim m As Double
+Dim companyName As String
+Dim i As Double
+Dim avgPrices As Variant
+Dim sum As Double
+Dim s As Double
+Dim w As Double
+
+Workbooks.Open ("Dataset 1")
+Workbooks.Open ("Dataset 2")
+
+
+Workbooks("Dataset 2.xlsx").Worksheets("Info list 2").Activate
+Cells(2, 1).Activate
+i = 2
+
+companyName = ActiveCell.Value
+Do
+    Do
+        ActiveCell.Offset(1, 0).Activate
+        i = i + 1
+    Loop While ActiveCell.Value = companyName
+
+        Rows(i).Select
+        Selection.Insert Shift:=xDown
+        ActiveCell.Value = "Stock Price Average"
+        
+        ActiveCell.Offset(1, 0).Activate
+        i = i + 1
+        Rows(i).Select
+        Selection.Insert Shift:=xDown
+        ActiveCell.Value = "Year Over Year Change"
+        
+        findCompanyByName companyName, i, i + 1
+        
+        Workbooks("dataset 2.xlsx").Worksheets("Info list 2").Activate
+     
+        companyName = Cells(i + 1, 1).Value
+        ActiveCell.Offset(1, 0).Activate
+        i = i + 1
+
+Loop While Not IsEmpty(ActiveCell.Offset(1, 0).Value)
+Cells(2, 19).Activate
+w = 2
+Do
+For s = 1 To 10
+sum = sum + ActiveCell.Offset(0, -s).Value
+Next
+ActiveCell.Value = sum / 10
+sum = 0
+ActiveCell.Offset(1, 0).Activate
+w = w + 1
+Loop While w < i
+'copying to the final output
+Workbooks("Dataset 2").Activate
+Range(A1, X60000).Copy
+Workbooks("Final Output").Activate
+Sheets(2).Activate
+Cells(1, 1).Activate
+ActiveCell.PasteSpecial xlPasteValues
+
+
+End Sub
+
+Function findCompanyByName(companyName As String, stockAvgRow As Double, changerow As Double)
+
+Dim companyRow As Range
+
+Workbooks("dataset 1.xlsx").Worksheets("Prices list 1").Activate
+
+With Worksheets("Prices list 1").Cells
+    Set targetCompanyCell = .Find(companyName, After:=.Range("A2"), LookIn:=xlValues)
+    If Not targetCompanyCell Is Nothing Then
+        targetCompanyCell.Select
+        ActiveCell.Offset(1, 0).Activate
+        prices = calculatePrices()
+        Workbooks("dataset 2.xlsx").Worksheets("Info list 2").Activate
+        populatePrice stockAvgRow, prices
+        changes = calculatechange()
+        growth changerow, changes
+    End If
+End With
+End Function
+
+Function calculatePrices() As Double()
+Dim days As Integer
+Dim prices(0 To 16) As Double
+Dim price As Double
+Dim year As Integer
+
+year = 0
+i = 2
+initialyear = 2000
+Do
+    
+    Do
+        price = price + ActiveCell.Value
+        days = days + 1
+        
+        ActiveCell.Offset(1, 0).Activate
+        i = i + 1
+    Loop While Cells(i, 2).Value = initialyear
+    
+    prices(year) = price / days
+    days = 0
+    price = 0
+    year = year + 1
+    initialyear = initialyear + 1
+    
+Loop While year < 17
+
+calculatePrices = prices
+ 
+End Function
+
+Function populatePrice(row As Double, prices As Variant)
+
+Dim m As Integer
+
+Workbooks("dataset 2.xlsx").Worksheets("Info list 2").Activate
+
+Cells(row - 1, 1).Activate
+
+For m = 0 To 15
+    ActiveCell.Offset(0, m + 2).Value = prices(m)
+Next
+
+End Function
+Function growth(row As Double, changes As Variant)
+
+Dim n As Integer
+Workbooks("dataset 2.xlsx").Worksheets("Info list 2").Activate
+For n = 3 To 17
+ActiveCell.Offset(1, n).Value = changes(n)
+Next
+ActiveCell.Offset(1, 0).Activate
+
+
+
+End Function
+Function calculatechange() As Double()
+Dim changes(3 To 17) As Double
+Dim change As Double
+Dim q As Double
+For m = 3 To 17
+If ActiveCell.Offset(0, m).Value <> 0 Then
+change = ActiveCell.Offset(0, m + 1).Value - ActiveCell.Offset(0, m).Value
+changes(m) = change * 100 / ActiveCell.Offset(0, m).Value
+Else: changes(m) = 0
+End If
+calculatechange = changes
+
+Next
+End Function
+
+
+
+
+
