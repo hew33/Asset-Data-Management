@@ -1,6 +1,6 @@
 # Asset-Data-Management
 VBA with Excel
-## Project Aim
+## Project Purpose
 I received two types of database, containing not necessarily the same companies and not necessarily for the same years. I needed to organizing those two different databases into one organized database, with companies and years in common.
 
 ## Steps in the project
